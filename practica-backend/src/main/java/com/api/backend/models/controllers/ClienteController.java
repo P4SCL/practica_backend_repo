@@ -113,7 +113,7 @@ public class ClienteController {
 		if(result.hasErrors()) {
 			Map<String,String> erroresCampos = new HashMap<>();
 			
-			result.getFieldErrors().forEach(err->erroresCampos.put(err.getField(),"El campo "+err.getField()+" "+err.getDefaultMessage()));
+			result.getFieldErrors().forEach(err->erroresCampos.put(err.getField(),"El campo: "+err.getField()+" "+err.getDefaultMessage()));
 			return new ResponseEntity<Map<String,String>>(erroresCampos,HttpStatus.BAD_REQUEST);
 		}
 		

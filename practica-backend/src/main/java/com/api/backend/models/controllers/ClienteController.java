@@ -3,10 +3,18 @@ package com.api.backend.models.controllers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,7 +34,6 @@ import com.api.backend.models.services.IClienteService;
 @RequestMapping("/api")
 public class ClienteController {
 	
-
 	@Autowired
 	private IClienteService clienteService;
 	
@@ -35,6 +42,12 @@ public class ClienteController {
 	public List<Cliente> listarClientes(){
 		return clienteService.findAll();
 	}
+	
+	@GetMapping("/clientes/page/{page}")
+	public Page<Cliente> listarClientesPage(@PathVariable int page){
+		return clienteService.findAll(PageRequest.of(page, 4));
+	}
+	
 	
 	@GetMapping("/clientes/{id}")
 	public ResponseEntity<?> buscarPorId(@PathVariable Long id){
@@ -54,18 +67,35 @@ public class ClienteController {
 	}
 	
 	@PostMapping("/clientes")
-	public ResponseEntity<?> guardarCliente(@RequestBody Cliente cliente){
+	public ResponseEntity<?> guardarCliente(@Valid @RequestBody Cliente cliente,BindingResult result){
 
 		Cliente clienteNew = null;
-		
 		Map<String,Object> response = new HashMap<>();
-		
+		Map<String,Object> erroresCampos = new HashMap<>();
+		// Si el result tiene errores
+	
+		if(result.hasErrors()) {
+			result.getFieldErrors().forEach(err->erroresCampos.put(err.getField(),"El campo "+err.getField()+" "+err.getDefaultMessage()));
+			return new ResponseEntity<Map<String,Object>>(erroresCampos,HttpStatus.BAD_REQUEST);
+		}
 		try {
 			clienteNew = clienteService.save(cliente);
-		}catch(DataAccessException e ) {
-			throw new ApiRequestException("No se pudo guardar el registro");
-		}
+		} catch (DataIntegrityViolationException dke) {
+
+			String[] codes = null;
+			Object[] arguments = null;
+			FieldError field_email = new FieldError("Cliente","email", cliente.getEmail(), false, codes, arguments, "Email duplicado");
+			
+			
+			result.addError(field_email);
 		
+			erroresCampos.put(field_email.getField(),field_email.getDefaultMessage());
+			
+
+			return new ResponseEntity<Map<String,Object>>(erroresCampos,HttpStatus.BAD_REQUEST);
+		}
+	    
+
 		response.put("mensaje", "Registro insertado correctamente");
 		response.put("cliente", clienteNew);
 		
@@ -73,25 +103,30 @@ public class ClienteController {
 	}
 	
 	@PutMapping("/clientes/{id}")
-	public ResponseEntity<?> actualizarCliente(@RequestBody Cliente cliente, @PathVariable Long id){
+	public ResponseEntity<?> actualizarCliente(@Valid @RequestBody Cliente cliente, @PathVariable Long id,BindingResult result){
 		
 		Map<String,Object> response = new HashMap<>();
 		
 		Cliente clienteBD = clienteService.findById(id);
 		Cliente clienteActualizado=null;
 		
+		if(result.hasErrors()) {
+			Map<String,String> erroresCampos = new HashMap<>();
+			
+			result.getFieldErrors().forEach(err->erroresCampos.put(err.getField(),"El campo "+err.getField()+" "+err.getDefaultMessage()));
+			return new ResponseEntity<Map<String,String>>(erroresCampos,HttpStatus.BAD_REQUEST);
+		}
+		
 		
 		if(clienteBD == null) {
 			throw new ApiRequestException("No se pudo encontrar el cliente con ID: ".concat(id.toString()));
 		}
-		try {
+		
 			clienteBD.setNombre(cliente.getNombre());
 			clienteBD.setApellido(cliente.getApellido());
 			clienteBD.setEmail(cliente.getEmail());
 			clienteActualizado = clienteService.update(clienteBD);
-		}catch(DataAccessException e) {
-			throw new ApiRequestException("No se pudo actualizar el registro");
-		}
+		
 		
 		response.put("mensaje", "Cliente actualizado con éxito");
 		response.put("cliente", clienteActualizado);

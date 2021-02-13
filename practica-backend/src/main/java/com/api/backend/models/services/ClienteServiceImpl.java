@@ -3,6 +3,8 @@ package com.api.backend.models.services;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.api.backend.models.dao.IClienteDAO;
@@ -47,6 +49,15 @@ public class ClienteServiceImpl implements IClienteService {
 	@Override
 	public void delete(Long id) {
 		clienteDao.deleteById(id);
+	}
+
+	/*
+	 * Método que devuelve una página de clientes.
+	 */
+	@Override
+	public Page<Cliente> findAll(Pageable page) {
+		
+		return clienteDao.findAll(page);
 	}
 	
 	

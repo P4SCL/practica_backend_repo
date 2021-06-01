@@ -1,5 +1,5 @@
 
-# API REST - RESERVAS (v1.0)
+# API REST - CLIENTES
 
 API REST encargada de gestionar clientes.
 

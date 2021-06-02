@@ -1,7 +1,7 @@
 
 # API REST - CLIENTES
 
-API REST encargada de gestionar clientes.
+API REST encargada de gestionar clientes.Los registros se pueden paginar.
 
 ![](https://gblobscdn.gitbook.com/assets%2F-LKmGSg4qhizjqeDPHJC%2F-LNYSvjOO0iDvi4jFPoT%2F-LNYTa1g9lqk3aPeXmh3%2Fimage.png?alt=media&token=270371cc-0d76-449b-a892-0bccc0ed8fa4)
 
